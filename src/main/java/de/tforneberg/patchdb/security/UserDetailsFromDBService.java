@@ -15,9 +15,6 @@ import de.tforneberg.patchdb.repo.UserRepository;
 @Service
 public class UserDetailsFromDBService implements UserDetailsService {
 	
-//	@Autowired
-//	private IUserDao userDao;
-	
 	@Autowired
 	private UserRepository userRepo;
 	
@@ -26,7 +23,6 @@ public class UserDetailsFromDBService implements UserDetailsService {
 		
 		//Get active user from database (own model User object)
 		de.tforneberg.patchdb.model.User user = userRepo.findByName(userName);
-//		de.tforneberg.patchdb.model.User user = userDao.getUserByName(userName);
 		
 		//Get the users' authority
 		GrantedAuthority authority = new SimpleGrantedAuthority(user.getStatus().toString());
