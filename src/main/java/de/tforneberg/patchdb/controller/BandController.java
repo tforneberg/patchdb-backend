@@ -20,7 +20,7 @@ public class BandController {
 
 	@Autowired BandRepository repo;
 	
-	@GetMapping("/{id}")
+	@GetMapping(Constants.ID_MAPPING)
 	@JsonView(Band.CompleteView.class)
 	public ResponseEntity<Band> getById(@PathVariable("id") int id) {
 		Band result = repo.findById(id).orElse(null);

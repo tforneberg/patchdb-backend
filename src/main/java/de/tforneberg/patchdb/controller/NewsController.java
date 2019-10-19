@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
@@ -34,7 +33,7 @@ public class NewsController {
 	@Autowired private NewsRepository newsRepo;
 	
 	//GET
-	@GetMapping("/{id}")
+	@GetMapping(Constants.ID_MAPPING)
 	@JsonView(NewsAndUserDefaultView.class)
 	public ResponseEntity<News> getById(@PathVariable("id") int id) {
 		News result = newsRepo.findById(id).orElse(null);
@@ -44,8 +43,8 @@ public class NewsController {
 	
 	 @GetMapping
 	 @JsonView(NewsAndUserDefaultView.class)
-	 public ResponseEntity<List<News>> getAll(@RequestParam(name = "page") Optional<Integer> page, @RequestParam(name = "size") Optional<Integer> size, 
-			 @RequestParam(name = "sortBy") Optional<String> sortBy, @RequestParam(name = "direction") Optional<String> direction) {
+	 public ResponseEntity<List<News>> getAll(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size, 
+			 @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @RequestParam(name = Constants.DIRECTION) Optional<String> direction) {
 		 Page<News> result = newsRepo.findAll(ControllerUtil.getPageable(page, size, sortBy, direction));
 		 
 		 return ResponseEntity.ok().body(result.getContent());
@@ -53,7 +52,7 @@ public class NewsController {
 	 
 	 //POST
 	 @PostMapping
-	 @PreAuthorize("hasAuthority('admin') || hasAuthority('mod')")
+	 @PreAuthorize(Constants.AUTH_ADMIN_OR_MOD)
 	 public ResponseEntity<Void> createNews(@RequestBody News news, BindingResult result) {
 		 //TODO validate? 
 		 newsRepo.save(news);

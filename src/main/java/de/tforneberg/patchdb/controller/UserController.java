@@ -53,7 +53,7 @@ public class UserController {
 	@Autowired private UserUtils userUtils;
 	
 	//GET
-	@GetMapping("/{id}")
+	@GetMapping(Constants.ID_MAPPING)
 	@JsonView(User.CompleteView.class)
 	public ResponseEntity<User> getById(@PathVariable("id") int id) {
 		User result = repo.findById(id).orElse(null);
@@ -71,8 +71,8 @@ public class UserController {
 	
 	@GetMapping()
 	@JsonView(User.DefaultView.class)
-	public ResponseEntity<List<User>> getAll(@RequestParam(name = "page") Optional<Integer> page, @RequestParam(name = "size") Optional<Integer> size, 
-			@RequestParam(name = "direction") Optional<String> direction, @RequestParam(name = "sortBy" ) Optional<String> sortBy) {
+	public ResponseEntity<List<User>> getAll(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size, 
+			@RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
 		Page<User> result = repo.findAll(ControllerUtil.getPageable(page, size, direction, sortBy));
 		return ResponseEntity.ok().body(result.getContent());
 	}
@@ -95,11 +95,11 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 	
-	@GetMapping("/{id}/patches")
+	@GetMapping(Constants.ID_MAPPING+"/patches")
 	@JsonView(UserAndPatchDefaultView.class)
 	public ResponseEntity<Collection> getUserPatches(@PathVariable("id") int id, 
-			@RequestParam(name = "page") Optional<Integer> page, @RequestParam(name = "size") Optional<Integer> size, 
-			@RequestParam(name = "sortBy") Optional<String> sortBy, @RequestParam(name = "direction") Optional<String> direction, Authentication auth) {
+			@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size, 
+			@RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @RequestParam(name = Constants.DIRECTION) Optional<String> direction, Authentication auth) {
 		boolean showIfNotApproved = ControllerUtil.hasUserStatus(auth, UserStatus.admin) || ControllerUtil.hasUserStatus(auth, UserStatus.mod);
 		User user = repo.findById(id).orElse(null);
 		
@@ -116,7 +116,7 @@ public class UserController {
 	}
 	
 	//PATCH
-	@PatchMapping("/{id}")
+	@PatchMapping(Constants.ID_MAPPING)
 	@JsonView(User.CompleteView.class)
 	public ResponseEntity<User> updateUser(@PathVariable("id") int id, @RequestBody String update, Authentication auth) {
 	    User user = repo.findById(id).orElse(null);
@@ -127,8 +127,8 @@ public class UserController {
 		return ResponseEntity.notFound().build();
 	}
 
-	@PatchMapping("/{id}/changePassword")
-	@PreAuthorize("@userUtils.mapIDtoUsername(#id) == authentication.principal.username")
+	@PatchMapping(Constants.ID_MAPPING+"/changePassword")
+	@PreAuthorize(Constants.AUTH_ID_IS_OF_REQUESTING_USER)
 	public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequestData data, @PathVariable("id") int id, BindingResult result) {
 		changePWvalidator.validate(data, result);
 		if (result.hasErrors()) { throw new BadRequestException(result); }
@@ -140,8 +140,8 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 	
-	@PatchMapping("/{id}/patches")
-	@PreAuthorize("@userUtils.mapIDtoUsername(#id) == authentication.principal.username")
+	@PatchMapping(Constants.ID_MAPPING+"/patches")
+	@PreAuthorize(Constants.AUTH_ID_IS_OF_REQUESTING_USER)
 	public ResponseEntity<String> addOrRemovePatch(@RequestBody Patch data, @PathVariable("id") int id) {
 		if (Patchable.HttpPatchOperation.remove.equals(data.getOperation())) {
 			repo.deletePatchFromCollection(data.getId(), id);

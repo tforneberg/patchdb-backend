@@ -47,7 +47,7 @@ public class PatchController {
 	@Autowired private UserUtils userUtils;
 	
 	//GET 
-	@GetMapping("/{id}")
+	@GetMapping(Constants.ID_MAPPING)
 	@JsonView(PatchCompleteOthersDefaultView.class)
 	public ResponseEntity<Patch> getById(@PathVariable("id") int id, Authentication auth) {
 		boolean showIfNotApproved = ControllerUtil.hasUserStatus(auth, UserStatus.admin) || ControllerUtil.hasUserStatus(auth, UserStatus.mod);
@@ -57,24 +57,24 @@ public class PatchController {
 	
 	 @GetMapping
 	 @JsonView(Patch.DefaultView.class)
-	 public ResponseEntity<List<Patch>> getApproved(@RequestParam(name = "page") Optional<Integer> page, @RequestParam(name = "size") Optional<Integer> size,
-			 @RequestParam(name = "direction") Optional<String> direction, @RequestParam(name = "sortBy" ) Optional<String> sortBy) {
+	 public ResponseEntity<List<Patch>> getApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
 		 Page<Patch> result = patchRepo.findByState(PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
 		 return ResponseEntity.ok().body(result.getContent());
 	 }
 	
 	 @GetMapping("/approvalNeeded")
 	 @JsonView(Patch.DefaultView.class)
-	 @PreAuthorize("hasAuthority('admin') || hasAuthority('mod')")
-	 public ResponseEntity<List<Patch>> getWhereApprovalNeeded(@RequestParam(name = "page") Optional<Integer> page, @RequestParam(name = "size") Optional<Integer> size,
-			 @RequestParam(name = "direction") Optional<String> direction, @RequestParam(name = "sortBy" ) Optional<String> sortBy) {
+	 @PreAuthorize(Constants.AUTH_ADMIN_OR_MOD)
+	 public ResponseEntity<List<Patch>> getWhereApprovalNeeded(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
 		 Page<Patch> result = patchRepo.findByState(PatchState.notApproved, ControllerUtil.getPageable(page, size, sortBy, direction));
 		 return ResponseEntity.ok().body(result.getContent());
 	 }
 	
 	//POST
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize(Constants.LOGGED_IN)
     public ResponseEntity<Void> uploadFile(@RequestPart("patchData") Patch patch, @RequestPart("file") MultipartFile file) {
     	//todo check form and file validity...
     	
@@ -93,7 +93,7 @@ public class PatchController {
     }
     
     //PATCH
-	@PatchMapping("/{id}")
+	@PatchMapping(Constants.ID_MAPPING)
 	@JsonView(PatchCompleteOthersDefaultView.class)
 	public ResponseEntity<Patch> updatePatch(@PathVariable("id") int id, @RequestBody String update, Authentication auth) {
 	    Patch patch = patchRepo.findById(id).orElse(null);
@@ -105,8 +105,8 @@ public class PatchController {
 	}
 	
 	//DELETE
-	@DeleteMapping("/{id}")
-	@PreAuthorize("hasAuthority('admin') || hasAuthority('mod')") //should a user be able to delete the patches that he added/created?
+	@DeleteMapping(Constants.ID_MAPPING)
+	@PreAuthorize(Constants.AUTH_ADMIN_OR_MOD) //should a user be able to delete the patches that he added/created?
 	public ResponseEntity<Void> deletePatch(@PathVariable("id") int id) {
 		Patch patch = patchRepo.findById(id).orElse(null);
 		if (patch != null) {
