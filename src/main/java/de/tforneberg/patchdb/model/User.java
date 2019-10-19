@@ -2,7 +2,6 @@ package de.tforneberg.patchdb.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -19,12 +18,25 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonView;
 
-@Entity
-@Table(name="users")
+import de.tforneberg.patchdb.security.HttpPATCHAllowed;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity @Table(name="users")
+@Data @AllArgsConstructor @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonView(User.DefaultView.class)
 public class User {
 	
-	public static enum Status { admin, mod, user, blockedUser };
+	@JsonIgnoreProperties public static interface BriefView {}
+	@JsonIgnoreProperties public static interface DefaultView extends BriefView {}
+	@JsonIgnoreProperties public static interface CompleteView extends DefaultView {}
+	
+	public static enum UserStatus { admin, mod, user, blockedUser };
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -36,97 +48,38 @@ public class User {
 	
 	@Column(name="status")
 	@Enumerated(EnumType.STRING)
-	private Status status;
+	@HttpPATCHAllowed(roles = {User.UserStatus.mod, User.UserStatus.admin})
+	private UserStatus status;
 	
 	@Column(name="image")
 	private String image;
 	
 	@Column(name="email")
-	@JsonIgnore //important for security: don't send email via JSON
+	@JsonIgnore
 	private String email;
 	
 	@Column(name="password")
-	@JsonIgnore //important for security: don't send pw via JSON
+	@JsonIgnore
 	private String password;
 	
 	@ManyToMany(fetch=FetchType.LAZY)
 	@JoinTable(name="collections",
 		joinColumns=@JoinColumn(name="user_id"),
 		inverseJoinColumns=@JoinColumn(name="patch_id"))
+	@JsonIgnore
 	private List<Patch> patches;
 	
 	@ElementCollection(fetch=FetchType.LAZY)
 	@CollectionTable(name="collections", joinColumns=@JoinColumn(name="user_id"))
 	@Column(name="patch_id")
+	@JsonView(CompleteView.class)
 	public List<Integer> patchIDs;
 
-	public User() {}
-
-	public User(int id, String name, Status status, String email) {
+	public User(int id, String name, UserStatus status, String email) {
 		this.id = id;
 		this.name = name;
 		this.status = status;
 		this.email = email;
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Status getStatus() {
-		return status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-	
-	public String getImage() {
-		return image;
-	}
-
-	public void setImage(String image) {
-		this.image = image;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public List<Patch> getPatches() {
-		return patches;
-	}
-	
-	public List<Integer> getPatchIDs() {
-		return patchIDs;
-	}
-
-	public void setPatches(List<Patch> patches) {
-		this.patches = patches;
 	}
 	
 	public void addPatch(Patch patch) {

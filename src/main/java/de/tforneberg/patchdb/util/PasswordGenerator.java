@@ -12,7 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class PasswordGenerator {
 	public static void main(String[] args) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-		SecureRandom random = new SecureRandom();
 		
 		if (args != null && args.length > 0) {
 			System.out.println(encoder.encode(args[0]));
@@ -27,6 +26,8 @@ public class PasswordGenerator {
 		    String password = scanner.next();
 
 		    System.out.println(encoder.encode(password));
+		    
+		    scanner.close();
 		}
 	}
 }  

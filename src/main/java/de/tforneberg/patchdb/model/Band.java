@@ -1,23 +1,33 @@
 package de.tforneberg.patchdb.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
-import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonView;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name="bands")
+@Entity @Table(name="bands")
+@Data @AllArgsConstructor @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonView(Band.DefaultView.class)
 public class Band {
+	
+	@JsonIgnoreProperties public static interface BriefView {}
+	@JsonIgnoreProperties public static interface DefaultView extends BriefView {}
+	@JsonIgnoreProperties public static interface CompleteView extends DefaultView {}
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -27,49 +37,15 @@ public class Band {
 	@Column(name="name")
 	private String name;
 	
-	@OneToMany(mappedBy="band", cascade= {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-	@JsonIgnore
-	private List<Patch> patches;
-	
-	public Band() {}
+	@ElementCollection(fetch=FetchType.LAZY)
+	@CollectionTable(name="patches", joinColumns=@JoinColumn(name="band_id"))
+	@Column(name="id")
+	@JsonView(CompleteView.class)
+	private Set<Integer> patchIDs;
 	
 	public Band(int id, String name) {
 		this.id = id;
 		this.name = name;
 	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public List<Patch> getPatches() {
-		return patches;
-	}
-
-	public void setPatches(List<Patch> patches) {
-		this.patches = patches;
-	}
-	
-	//add conveniece method for bi-directional relationship
-	public void add(Patch patch) {
-		if (patches == null) {
-			patches = new ArrayList<>();
-		}
-		patches.add(patch);
-		patch.setBand(this);
-	}
-	
 	
 }

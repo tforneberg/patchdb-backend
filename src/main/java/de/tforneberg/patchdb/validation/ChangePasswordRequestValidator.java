@@ -5,7 +5,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
-import de.tforneberg.patchdb.model.requests.ChangePasswordRequestData;
+import de.tforneberg.patchdb.model.dto.ChangePasswordRequestData;
 
 @Component
 public class ChangePasswordRequestValidator implements Validator {

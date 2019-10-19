@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `patchdb`.`users` (
   `name` VARCHAR(45) NOT NULL,
   `password` VARCHAR(100) NOT NULL,
   `image` VARCHAR(45) NULL DEFAULT NULL,
-  `status` ENUM('admin', 'mod', 'user', 'blocked_user') NOT NULL,
+  `status` ENUM('admin', 'mod', 'user', 'blockedUser') NOT NULL,
   `email` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE,
@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS `patchdb`.`patches` (
   `description` VARCHAR(2048) NULL DEFAULT NULL,
   `image` VARCHAR(256) NULL DEFAULT NULL,
   `type` ENUM('woven', 'stitched', 'printed') NULL DEFAULT NULL,
+  `state` ENUM('approved', 'notApproved') NOT NULL DEFAULT 'notApproved',
   `num_of_copies` INT(11) NULL DEFAULT NULL,
   `manufacturer` VARCHAR(45) NULL DEFAULT NULL,
   `release_date` DATE NULL DEFAULT NULL,
@@ -71,6 +72,23 @@ CREATE TABLE IF NOT EXISTS `patchdb`.`patches` (
     REFERENCES `patchdb`.`bands` (`id`),
   CONSTRAINT `user_id`
     FOREIGN KEY (`user_inserted`)
+    REFERENCES `patchdb`.`users` (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `patchdb`.`news`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `patchdb`.`news` (
+  `id` INT(11) NOT NULL,
+  `title` VARCHAR(90) NOT NULL,
+  `content` LONGTEXT NOT NULL,
+  `date_created` DATETIME NOT NULL,
+  `created_by` INT(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `user_inserted`
+    FOREIGN KEY (`id`)
     REFERENCES `patchdb`.`users` (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4

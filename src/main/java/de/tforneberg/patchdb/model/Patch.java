@@ -3,7 +3,6 @@ package de.tforneberg.patchdb.model;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,16 +19,32 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-@Entity
-@Table(name="patches")
-public class Patch {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonView;
+
+import de.tforneberg.patchdb.security.HttpPATCHAllowed;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity @Table(name="patches")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonView(Patch.DefaultView.class)
+public class Patch extends Patchable {
 	
-	public static enum Type { woven, stitched, printed };
+	@JsonIgnoreProperties public static interface BriefView {}
+	@JsonIgnoreProperties public static interface DefaultView extends BriefView {}
+	@JsonIgnoreProperties public static interface CompleteView extends DefaultView {}
+	
+	public static enum PatchType { woven, stitched, printed };
+	public static enum PatchState { approved, notApproved };
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="id")
-	private int id;
+	protected int id;
 	
 	@Column(name="name")
 	private String name;
@@ -37,18 +52,23 @@ public class Patch {
 	@Column(name="date_inserted")
 	private Date dateInserted;
 	
-	@OneToOne(fetch=FetchType.EAGER, cascade= {CascadeType.DETACH, CascadeType.REFRESH})
+	@OneToOne(fetch=FetchType.LAZY, cascade= {CascadeType.DETACH, CascadeType.REFRESH})
 	@JoinColumn(name="user_inserted")
+	@JsonView(CompleteView.class)
 	private User userInserted;
 	
-//	private User[] usersChanged;
-//	private String[] datesChanged;
+	//TODO:
+	//private User[] usersChanged;
+	//private String[] datesChanged;
+	//evtl Klasse PatchChange (extends Change?)... dann PatchChange[] changes
 	
-	@ManyToOne(fetch=FetchType.EAGER, cascade= {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+	@ManyToOne(fetch=FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.REFRESH})
 	@JoinColumn(name="band_id")
+	@JsonView(CompleteView.class)
 	private Band band;
 	
 	@Column(name="description")
+	@JsonView(CompleteView.class)
 	private String description;
 	
 	@Column(name="image")
@@ -56,150 +76,37 @@ public class Patch {
 	
 	@Column(name="type")
 	@Enumerated(EnumType.STRING)
-	private Type type;
+	private PatchType type;
+	
+	@Column(name="state")
+	@Enumerated(EnumType.STRING)
+	@HttpPATCHAllowed(roles = {User.UserStatus.mod, User.UserStatus.admin})
+	private PatchState state;
 	
 	@Column(name="num_of_copies")
-	private int numOfCopies;
+	@JsonView(CompleteView.class)
+	private Integer numOfCopies;
 	
 	@Column(name="release_date")
+	@JsonView(CompleteView.class)
 	private Date releaseDate;
 	
 	@Column(name="manufacturer")
+	@JsonView(CompleteView.class)
 	private String manufacturer;
 	
 	@ManyToMany(fetch=FetchType.LAZY)
 	@JoinTable(name="collections",
 		joinColumns=@JoinColumn(name="patch_id"),
 		inverseJoinColumns=@JoinColumn(name="user_id"))
+	@JsonView(CompleteView.class)
 	private List<User> users;
-	
-	public Patch() {}
 	
 	public Patch(int id, String title, Date dateInserted, User userInserted) {
 		this.id = id;
 		this.name = title;
 		this.dateInserted = dateInserted;
 		this.userInserted = userInserted;
-	}
-	
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Date getDateInserted() {
-		return dateInserted;
-	}
-
-	public void setDateInserted(Date dateInserted) {
-		this.dateInserted = dateInserted;
-	}
-
-	public User getUserInserted() {
-		return userInserted;
-	}
-
-	public void setUserInserted(User userInserted) {
-		this.userInserted = userInserted;
-	}
-
-//	public User[] getUsersChanged() {
-//		return usersChanged;
-//	}
-//
-//	public void setUsersChanged(User[] usersChanged) {
-//		this.usersChanged = usersChanged;
-//	}
-//
-//	public String[] getDatesChanged() {
-//		return datesChanged;
-//	}
-//
-//	public void setDatesChanged(String[] datesChanged) {
-//		this.datesChanged = datesChanged;
-//	}
-
-	public Band getBand() {
-		return band;
-	}
-
-	public void setBand(Band band) {
-		this.band = band;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public String getImage() {
-		return image;
-	}
-
-	public void setImage(String image) {
-		this.image = image;
-	}
-
-	public Type getType() {
-		return type;
-	}
-
-	public void setType(Type type) {
-		this.type = type;
-	}
-
-	public int getNumOfCopies() {
-		return numOfCopies;
-	}
-
-	public void setNumOfCopies(int numOfCopies) {
-		this.numOfCopies = numOfCopies;
-	}
-
-	public Date getDatePublished() {
-		return releaseDate;
-	}
-
-	public void setDatePublished(Date datePublished) {
-		this.releaseDate = datePublished;
-	}
-
-	public String getManufacturer() {
-		return manufacturer;
-	}
-
-	public void setManufacturer(String manufacturer) {
-		this.manufacturer = manufacturer;
-	}
-
-	public Date getReleaseDate() {
-		return releaseDate;
-	}
-
-	public void setReleaseDate(Date releaseDate) {
-		this.releaseDate = releaseDate;
-	}
-
-	public List<User> getUsers() {
-		return users;
-	}
-
-	public void setUsers(List<User> users) {
-		this.users = users;
 	}
 	
 	public void addUser(User user) {

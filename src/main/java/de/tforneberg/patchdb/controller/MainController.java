@@ -1,17 +1,16 @@
-package de.tforneberg.patchdb.rest;
+package de.tforneberg.patchdb.controller;
 
-import java.time.LocalDateTime;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin
-public class FunRestController {
+public class MainController {
 	
 	@GetMapping("/")
-	public String sayHello() {
-		return "Hallo Weeeeeeelt. Zeit aufm Server is: "+LocalDateTime.now();
+	public ResponseEntity<Void> sayHello() {
+		return ResponseEntity.ok().build();
 	}
 }

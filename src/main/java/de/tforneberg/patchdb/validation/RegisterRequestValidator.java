@@ -6,7 +6,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
-import de.tforneberg.patchdb.model.requests.RegisterRequestData;
+import de.tforneberg.patchdb.model.dto.RegisterRequestData;
 import de.tforneberg.patchdb.repo.UserRepository;
 
 @Component
@@ -28,13 +28,12 @@ public class RegisterRequestValidator implements Validator {
         if (req.getName().length() < 6 || req.getName().length() > 32) {
             errors.rejectValue("name", "size");
         }
-//        if (userService.isUsernameUsed(req.getName()) {
+        
         if (userRepo.findByName(req.getName()) != null) {
             errors.rejectValue("name", "duplicate");
         }
         
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "email", "notEmpty");
-//        if (userService.isEmailUsed(req.getEmail())) {
         if (userRepo.findByEmail(req.getEmail()) != null) {
             errors.rejectValue("email", "duplicate");
         }

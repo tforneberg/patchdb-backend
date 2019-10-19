@@ -10,10 +10,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>de.tforneberg</groupId>
-	<artifactId>springbootdemoapp</artifactId>
+	<artifactId>PatchDb</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>springbootdemoapp</name>
-	<description>Demo project for Spring Boot</description> 
+	<name>PatchDb</name>
+	<description>PatchDB Backend</description> 
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -21,15 +21,15 @@
 	
 	<!-- Amazon AWS Dependency Management -->
 	<dependencyManagement>
-   <dependencies>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>bom</artifactId>
-      <version>2.4.12</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
-</dependencies>
+	   <dependencies>
+		   <dependency>
+		      <groupId>software.amazon.awssdk</groupId>
+		      <artifactId>bom</artifactId>
+		      <version>2.4.12</version>
+		      <type>pom</type>
+		      <scope>import</scope>
+		    </dependency>
+		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
@@ -77,87 +77,110 @@
 		    <artifactId>jackson-databind</artifactId>
 		</dependency>
 		
+		<dependency> <!-- Model Mapper (Conversion Entity <-> DTO) -->
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>2.3.4</version>
+		</dependency>
+		
 		<dependency> <!--  Security -->
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-security</artifactId>
 	    </dependency>
-		
-		<!-- can be removed if no tokens are used ...  -->
-		<dependency>
-		    <groupId>org.springframework.security</groupId>
-		    <artifactId>spring-security-jwt</artifactId>
-		    <version>1.0.10.RELEASE</version>
+	    
+	    <dependency> <!-- Thumbnail generation library -->
+		  	<groupId>net.coobird</groupId>
+		  	<artifactId>thumbnailator</artifactId>
+		  	<version>0.4.8</version>
 		</dependency>
-		
-		<!-- can be removed if no tokens are used ...  -->
-		<dependency>
-		    <groupId>org.springframework.security.oauth</groupId>
-		    <artifactId>spring-security-oauth2</artifactId>
-		    <version>2.3.4.RELEASE</version>
-		</dependency>
-		
-		<!-- can be removed if no tokens are used ...  -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.9.1</version>
-		</dependency>
-		
-<!-- 		<dependency>
-		   <groupId>com.amazonaws</groupId>
-		   <artifactId>aws-java-sdk</artifactId>
-		   <version>1.11.503</version>
-		</dependency> -->
-<!-- 	    <dependency>
-	      <groupId>software.amazon.awssdk</groupId>
-	      <artifactId>bom</artifactId>
-	      <version>2.0.0</version>
-	      <type>pom</type>
-	      <scope>import</scope>
-	    </dependency>-->
-
-<!--  	  <dependency>
-	    <groupId>software.amazon.awssdk</groupId>
-	    <artifactId>aws-java-sdk</artifactId>
-	    <version>2.0.0</version>
-	  </dependency> -->
 	  
-	  <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
-<version>2.4.12</version>
-	</dependency>
+	  	<dependency> <!-- Access to AWS S3 -->
+      		<groupId>software.amazon.awssdk</groupId>
+	      	<artifactId>s3</artifactId>
+			<!-- <version>2.4.12</version>-->
+		</dependency>
 	  
+	   	<dependency> <!-- Nice lib that provides eg @Getter/@Setter annotations -->
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.8</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.johnzon</groupId>
+		    <artifactId>johnzon-core</artifactId>
+		    <version>${johnzon.version}</version>
+		</dependency>
+		
 	  
 		
 	</dependencies>
 
 	<build>
-		<plugins>
-			<plugin><!-- For packaging and running -->
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			
-	      	<plugin><!--  Heroku plugin, can be removed if Heroku is not used for deployment -->
-		        <groupId>com.heroku.sdk</groupId>
-		        <artifactId>heroku-maven-plugin</artifactId>
-		        <version>2.0.6</version>
-     		</plugin>
-     		
-     		 <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals><goal>copy-dependencies</goal></goals>
-                    </execution>
-                </executions>
-            </plugin>
-            
-		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin><!-- For packaging and running -->
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+				</plugin>
+				
+		      	<plugin><!--  Heroku plugin, can be removed if Heroku is not used for deployment -->
+			        <groupId>com.heroku.sdk</groupId>
+			        <artifactId>heroku-maven-plugin</artifactId>
+			        <version>2.0.6</version>
+	     		</plugin>
+	     		
+	     		 <plugin>
+	                <groupId>org.apache.maven.plugins</groupId>
+	                <artifactId>maven-dependency-plugin</artifactId>
+	                <executions>
+	                    <execution>
+	                        <id>copy-dependencies</id>
+	                        <phase>package</phase>
+	                        <goals><goal>copy-dependencies</goal></goals>
+	                    </execution>
+	                </executions>
+	            </plugin>
+	            
+	            <plugin><!-- TypeScript Code Generation ... call mvn typescript-generator:generate -->
+				    <groupId>cz.habarta.typescript-generator</groupId>
+				    <artifactId>typescript-generator-maven-plugin</artifactId>
+				    <version>2.17.558</version>
+				    <executions>
+				        <execution>
+				            <id>generate</id>
+				            <goals>
+				                <goal>generate</goal>
+				            </goals>
+				            <phase>process-classes</phase>
+				        </execution>
+				    </executions>
+				    <configuration>
+				        <jsonLibrary>jackson2</jsonLibrary>
+				        <classPatterns>
+				            <pattern>de.tforneberg.patchdb.model.**</pattern>
+				        </classPatterns>
+				        <customTypeMappings>
+                    		<mapping>java.sql.Date:string</mapping>
+               			</customTypeMappings>
+				        <outputKind>module</outputKind>
+				        <outputFileType>implementationFile</outputFileType>
+				        <mapClasses>asClasses</mapClasses>
+				        <excludeClassPatterns>
+				        	<excludeClassPattern>
+				        		de.tforneberg.patchdb.model.**View
+				        	</excludeClassPattern>
+				        	<excludeClassPattern>
+				        		de.tforneberg.patchdb.model.**Views
+				        	</excludeClassPattern>
+			        	</excludeClassPatterns>
+				        <mapEnum>asEnum</mapEnum>
+				        <outputFile>C:/ownCloud/Programmierprojekte/patchdb_frontend/src/model/Model.ts</outputFile>
+				    </configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>
