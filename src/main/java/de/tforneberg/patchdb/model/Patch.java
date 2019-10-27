@@ -38,7 +38,7 @@ public class Patch extends Patchable {
 	@JsonIgnoreProperties public static interface DefaultView extends BriefView {}
 	@JsonIgnoreProperties public static interface CompleteView extends DefaultView {}
 	
-	public static enum PatchType { woven, stitched, printed };
+	public static enum PatchType { Woven, Stitched, Printed };
 	public static enum PatchState { approved, notApproved };
 	
 	@Id

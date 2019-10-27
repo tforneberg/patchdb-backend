@@ -43,6 +43,12 @@ public class Band {
 	@JsonView(CompleteView.class)
 	private Set<Integer> patchIDs;
 	
+	//TODO user created ? 
+	
+	//TODO date ? 
+	
+	//TODO refactor/rename to "Artist"
+	
 	public Band(int id, String name) {
 		this.id = id;
 		this.name = name;

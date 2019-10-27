@@ -55,6 +55,38 @@ public class PatchController {
 		return ResponseEntity.of(result);
 	}
 	
+	@GetMapping("/findByName/{name}")
+	@JsonView(Patch.DefaultView.class)
+	public ResponseEntity<List<Patch>> getByNameApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("name") String name) {
+		Page<Patch> result = patchRepo.findByNameContainingIgnoreCaseAndState(name, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+		return ResponseEntity.ok().body(result.getContent());
+	}
+	
+	@GetMapping("/findByBand/{id}")
+	@JsonView(Patch.DefaultView.class)
+	public ResponseEntity<List<Patch>> getByBandApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("id") int bandId) {
+		Page<Patch> result = patchRepo.findByBandIdAndWithState(bandId, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+		return ResponseEntity.ok().body(result.getContent());
+	}
+	
+	@GetMapping("/findByUserCreated/{id}")
+	@JsonView(Patch.DefaultView.class)
+	public ResponseEntity<List<Patch>> getByUserCreatedAndApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("id") int userCreatedId) {
+		Page<Patch> result = patchRepo.findPatchesByCreatorIdAndWithState(userCreatedId, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+		return ResponseEntity.ok().body(result.getContent()); 
+	}
+	
+	@GetMapping("/findByType/{type}")
+	@JsonView(Patch.DefaultView.class)
+	public ResponseEntity<List<Patch>> getByTypeAndApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("type") String type) {
+		Page<Patch> result = patchRepo.findPatchesByTypeAndWithState(Patch.PatchType.valueOf(type), PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+		return ResponseEntity.ok().body(result.getContent());
+	}
+	
 	 @GetMapping
 	 @JsonView(Patch.DefaultView.class)
 	 public ResponseEntity<List<Patch>> getApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
@@ -87,6 +119,7 @@ public class PatchController {
     	patch.setImage(fileUrl);
     	patch.setUserInserted(userRepository.findByName(auth.getName()));
     	patch.setDateInserted(new Date(new java.util.Date().getTime()));
+    	patch.setState(PatchState.notApproved);
     	
     	patchRepo.save(patch);
     	return ResponseEntity.ok().build();

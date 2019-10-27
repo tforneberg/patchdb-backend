@@ -56,6 +56,14 @@ public class AWSS3Client {
 				.build();
 	}
 	
+	public String uploadPatchImages(MultipartFile multipartFile) {
+		return uploadImageAndThumbnail(multipartFile, "patches", 1500, 300);
+	}
+	
+	public String uploadUserImages(MultipartFile multipartFile) {
+		return uploadImageAndThumbnail(multipartFile, "users", 1000, 200);
+	}
+	
 	/**
 	 * Uploads an image to the s3 storage after extracting it from the given MultipartFile. Returns the url. 
 	 * Additionaly, a smaller image is uploaded (thumbnail version) with the name  /url suffix "_s".
@@ -63,12 +71,12 @@ public class AWSS3Client {
 	 * @param multipartFile the file to save. 
 	 * @return the url under which the file was saved. 
 	 */
-	public String uploadPatchImages(MultipartFile multipartFile) {
+	public String uploadImageAndThumbnail(MultipartFile multipartFile, String entityPath, int imageMaxSize, int thumbnailMaxSize) {
 		String fileUrlForDatabase = null;
 	    try {
 	    	String fileName = generateTimeStampFileName(multipartFile);
 			String fileNameSmall = THUMBNAIL_PREFIX+fileName;
-		    fileUrlForDatabase = endpointUrl + "/" + bucketName + "/patches/" + fileName;
+		    fileUrlForDatabase = endpointUrl + "/" + bucketName + "/"+entityPath+"/" + fileName;
 	    	
 	        File originalFile = convertMultiPartToFile(multipartFile);
 	        File bigFileToUpload = new File(fileName);
@@ -78,18 +86,18 @@ public class AWSS3Client {
             int height = image.getHeight();
             int width = image.getWidth();
             
-            //create big file to upload with max dimensions 1500x1500
-            if (height > 1500 || width > 1500) {
-                Thumbnails.of(image).size(1500, 1500).toFile(bigFileToUpload);
+            //create big file to upload with max dimensions imageMaxSize x imageMaxSize
+            if (height > imageMaxSize || width > imageMaxSize) {
+                Thumbnails.of(image).size(imageMaxSize, imageMaxSize).toFile(bigFileToUpload);
             } else {
             	bigFileToUpload = originalFile;
             }
             
-            //create small file to upload with dimensions 300x300
-            Thumbnails.of(image).size(300, 300).toFile(smallFileToUpload);
+            //create small file to upload with dimensions thumbnailMaxSize x thumbnailMaxSize
+            Thumbnails.of(image).size(thumbnailMaxSize, thumbnailMaxSize).toFile(smallFileToUpload);
 
-	        uploadFileTos3bucket("patches/"+fileName, bigFileToUpload);
-	        uploadFileTos3bucket("patches/"+fileNameSmall, smallFileToUpload);
+	        uploadFileTos3bucket(entityPath+"/"+fileName, bigFileToUpload);
+	        uploadFileTos3bucket(entityPath+"/"+fileNameSmall, smallFileToUpload);
 	        originalFile.delete();
 	        bigFileToUpload.delete();
 	        smallFileToUpload.delete();

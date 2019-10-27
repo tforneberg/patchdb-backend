@@ -176,6 +176,7 @@
 				        	</excludeClassPattern>
 			        	</excludeClassPatterns>
 				        <mapEnum>asEnum</mapEnum>
+				        <nonConstEnums>true</nonConstEnums>
 				        <outputFile>C:/ownCloud/Programmierprojekte/patchdb_frontend/src/model/Model.ts</outputFile>
 				    </configuration>
 				</plugin>

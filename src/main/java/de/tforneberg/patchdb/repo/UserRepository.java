@@ -5,27 +5,22 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
+
+import de.tforneberg.patchdb.controller.Constants;
+import de.tforneberg.patchdb.controller.ControllerUtil;
 import de.tforneberg.patchdb.model.User;
 
-public interface UserRepository extends JpaRepository<User, Integer>{
+public interface UserRepository extends JpaRepository<User, Integer> {
+	
 	User findByName(String name);
+	
 	User findByEmail(String email);
 	
-	@PreAuthorize("hasAuthority('admin') || hasAuthority('mod')") 
-	@Override
+	@Override @PreAuthorize(Constants.AUTH_ADMIN_OR_MOD) 
 	void deleteById(Integer id);
-
-	@PreAuthorize("hasAuthority('admin') || hasAuthority('mod')")
-	@Override
+	
+	@Override @PreAuthorize(Constants.AUTH_ADMIN_OR_MOD)
 	void delete(User user);
-
-	@PreAuthorize("hasAuthority('admin') || hasAuthority('mod')")
-	@Override
-	void deleteAll(Iterable<? extends User> users);
-
-	@PreAuthorize("hasAuthority('admin') || hasAuthority('mod')")
-	@Override
-	void deleteAll();
 	
 	@Modifying @Transactional @Query(value="INSERT INTO collections (patch_id, user_id) VALUES (?1, ?2)", nativeQuery = true)
 	void insertIntoCollection(Integer patchId, Integer userId);
