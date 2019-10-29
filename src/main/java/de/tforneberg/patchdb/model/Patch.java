@@ -17,7 +17,12 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Formula;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -101,6 +106,15 @@ public class Patch extends Patchable {
 		inverseJoinColumns=@JoinColumn(name="user_id"))
 	@JsonView(CompleteView.class)
 	private List<User> users;
+	
+	//does not work at the moment (NullPointer) with native queries used in repository (bc of collection table) .. see https://hibernate.atlassian.net/browse/HHH-7525
+	//@Formula("(SELECT COUNT(*) FROM collections WHERE collections.patch_id = id)")
+	//private Integer amountUsers;
+	
+	//workaround for Hibernate bug, see comment above
+	@Column(name="amount_users", insertable = false, updatable = false)
+	@ColumnTransformer(read = "(SELECT COUNT(*) FROM collections WHERE collections.patch_id = id)")
+	private Integer amountUsers;
 	
 	public Patch(int id, String title, Date dateInserted, User userInserted) {
 		this.id = id;

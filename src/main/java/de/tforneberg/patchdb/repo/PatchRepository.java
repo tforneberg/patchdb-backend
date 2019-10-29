@@ -14,11 +14,11 @@ public interface PatchRepository extends JpaRepository<Patch, Integer> {
 	
 	@Query(value="SELECT * FROM patches WHERE id IN (SELECT patch_id FROM collections WHERE user_id = ?1)", nativeQuery = true,
 			countQuery="SELECT count(*) FROM  patches WHERE id IN (SELECT patch_id FROM collections WHERE user_id = ?1)")
-	Page<Patch> findPatchesByUserId(Integer id, Pageable page); //TODO convert to JPQL
+	Page<Patch> findPatchesByUserId(Integer id, Pageable page); //TODO convert to JPQL ... how with collection?
 	
 	@Query(value="SELECT * FROM patches WHERE id IN (SELECT patch_id FROM collections WHERE user_id = ?1) AND state = ?2", nativeQuery = true,
 			countQuery="SELECT count(*) FROM  patches WHERE id IN (SELECT patch_id FROM collections WHERE user_id = ?1) AND state = ?2")
-	Page<Patch> findPatchesByUserIdAndWithState(Integer id, PatchState state, Pageable page); //TODO convert to JPQL
+	Page<Patch> findPatchesByUserIdAndWithState(Integer id, PatchState state, Pageable page); //TODO convert to JPQL ... how with collection?
 	
 	Optional<Patch> findByIdAndState(Integer id, PatchState state);
 	
