@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +28,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private UserDetailsFromDBService userDetailsService;
 	
+    @Autowired
+    private Environment environment;
+	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 	    return new BCryptPasswordEncoder();
@@ -37,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		//Allow CORS from the front-end domain
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowCredentials(true); //needed for JWT authentication to work
-		config.setAllowedOrigins(Arrays.asList("http://localhost:8081")); //allowed origins: the front-end URL
+		config.setAllowedOrigins(Arrays.asList(environment.getProperty("cors.allowedUrls").split(","))); //allowed front-end URLs
 		config.addAllowedHeader("*");  //any header
 		config.addAllowedMethod("*");  //any method
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -53,6 +57,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private void configureSession(HttpSecurity http) throws Exception {
         http
         	.httpBasic()
+    	.and()
+			.rememberMe().rememberMeParameter("remember").tokenValiditySeconds(2629746) //one month 
         .and()
 	        .authorizeRequests()
 	        	.antMatchers("/", "/login", "/api/logout", "/api/users/register").permitAll()

@@ -1,12 +1,6 @@
 package de.tforneberg.patchdb.util;
 
-import java.security.SecureRandom;
-import java.security.spec.KeySpec;
-import java.util.Random;
 import java.util.Scanner;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class PasswordGenerator {
