@@ -7,6 +7,4 @@ import de.tforneberg.patchdb.model.Band;
 
 public interface BandRepository extends JpaRepository<Band, Integer> {
 	
-
-	
 }

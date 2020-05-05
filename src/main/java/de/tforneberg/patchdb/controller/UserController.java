@@ -65,6 +65,11 @@ public class UserController {
 		
 		return ControllerUtil.getResponseOrNotFound(result);
 	}
+	
+	@GetMapping("/login")
+	public ResponseEntity<Void> login() {
+		return ResponseEntity.ok().build();
+	}
 
 	@GetMapping("/findByName/{name}") //better as query param ...  /&name={name} ?? would allow generic search for every field
 	@JsonView(User.CompleteView.class)

@@ -1,6 +1,7 @@
 package de.tforneberg.patchdb.controller;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,32 +37,38 @@ public class ControllerUtil {
 //		return false;
 //	}
 	
+	/**
+	 * Updates a given object (objectToUpdate) of given type (type) with the given string (string). 
+	 * Therefore, the string (containing a JSON stringified part of the object to update, containing only the fields that should be updated)
+	 * gets converted into a object of the given type. After this, the fields of the given object get set with the fields from the 
+	 * parsed object. This method also checks the Authentication of the given user to update the fields, first.
+	 * The fields need a HttpPatchAllowed annotation containing the role of auth
+	 * 
+	 * @param string the string containing a JSON Patch (a part of the object to update, containing only the fields with new values) 
+	 * @param objectToUpdate the object to update
+	 * @param type the type of the object to update
+	 * @param auth the authentication of the user performing the method call
+	 * @return true if the operation is successful, false otherwise
+	 */
 	static <T> boolean updateObjectWithPatchString(String string, T objectToUpdate, Class<T> type, Authentication auth) {
 		ObjectMapper objectMapper = new ObjectMapper();
     	try {
     		T objectWithOnlyUpdatedFields = objectMapper.readValue(string, type);
-    		
     		Iterator<String> fieldNamesIterator = objectMapper.readTree(string).fieldNames();
-			ArrayList<Field> fields = new ArrayList<>();
 			
+    		ArrayList<Field> fields = new ArrayList<>();
 			while (fieldNamesIterator.hasNext()) {
 		        fields.add(ReflectionUtils.findField(type, (String) fieldNamesIterator.next()));
 			}
 			
-	        if (!isUserAllowedToDoHttpPATCHRequestOnFields(auth, fields.toArray(new Field[fields.size()]))) return false;
-	        
+	        if (!isUserAllowedToDoHttpPATCHRequestOnFields(auth, fields.toArray(new Field[0]))) return false;
 	        for (Field field : fields) {
-		        String fieldFirstLetterUppercase = field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);
+		        String fieldFirstLetterUppercase = StringUtils.capitalize(field.getName());
 		        Method setterForField = ReflectionUtils.findMethod(type, "set" + fieldFirstLetterUppercase, field.getType());
 		        Method getterForField = ReflectionUtils.findMethod(type, "get" + fieldFirstLetterUppercase);
-		        try {
-					setterForField.invoke(objectToUpdate, getterForField.invoke(objectWithOnlyUpdatedFields));
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					e.printStackTrace();
-					return false;
-				}
+		        setterForField.invoke(objectToUpdate, getterForField.invoke(objectWithOnlyUpdatedFields));
 	        }
-		} catch (IOException e) {
+		} catch (IOException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -68,7 +76,7 @@ public class ControllerUtil {
     	return true;
 	}
 	
-	static boolean isUserAllowedToDoHttpPATCHRequestOnFields(Authentication auth, Field... fields) {
+	private static boolean isUserAllowedToDoHttpPATCHRequestOnFields(Authentication auth, Field... fields) {
 		for (Field field : fields) {
 	        HttpPATCHAllowed accessAnnotation = field.getAnnotation(HttpPATCHAllowed.class);
 	        if (accessAnnotation == null) return false;
@@ -82,6 +90,9 @@ public class ControllerUtil {
         return true;
 	}
 	
+	/**
+	 * Checks if the given user/authentication has the given UserStatus in his authority string
+	 */
 	static boolean hasUserStatus(Authentication auth, UserStatus userStatus) {
 		if (auth != null) {
 			Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();

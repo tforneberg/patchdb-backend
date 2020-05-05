@@ -113,19 +113,21 @@
 		    <version>${johnzon.version}</version>
 		</dependency>
 		
-	  
-		
 	</dependencies>
 
 	<build>
+		<plugins>
+			<plugin><!-- For packaging and running -->
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>    
+              			<mainClass>de.tforneberg.patchdb.ServerApp</mainClass>
+           		</configuration>
+			</plugin>
+		</plugins>
 		<pluginManagement>
 			<plugins>
-				<plugin><!-- For packaging and running -->
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-maven-plugin</artifactId>
-				</plugin>
-				
-		      	<plugin><!--  Heroku plugin, can be removed if Heroku is not used for deployment -->
+		      	<plugin><!-- Heroku plugin, can be removed if Heroku is not used for deployment -->
 			        <groupId>com.heroku.sdk</groupId>
 			        <artifactId>heroku-maven-plugin</artifactId>
 			        <version>2.0.6</version>
@@ -143,7 +145,7 @@
 	                </executions>
 	            </plugin>
 	            
-	            <plugin><!-- TypeScript Code Generation ... call mvn typescript-generator:generate -->
+	            <plugin><!-- TypeScript Code Generation. Call "mvn typescript-generator:generate" -->
 				    <groupId>cz.habarta.typescript-generator</groupId>
 				    <artifactId>typescript-generator-maven-plugin</artifactId>
 				    <version>2.17.558</version>
@@ -180,6 +182,34 @@
 				        <outputFile>C:/ownCloud/Programmierprojekte/patchdb_frontend/src/model/Model.ts</outputFile>
 				    </configuration>
 				</plugin>
+				
+				<plugin> <!-- Copy frontend to resources -->
+                <artifactId>maven-resources-plugin</artifactId>
+	                <executions>
+	                    <execution>
+	                        <id>copy Vue.js frontend content</id>
+	                        <phase>generate-resources</phase>
+	                        <goals>
+	                            <goal>copy-resources</goal>
+	                        </goals>
+	                        <configuration>
+	                            <outputDirectory>src/main/resources/public</outputDirectory>
+	                            <overwrite>true</overwrite>
+	                            <resources>
+	                                <resource>
+	                                    <directory>${project.basedir}/../patchdb_frontend/target/dist</directory>
+	                                    <!-- <includes>
+	                                        <include>static/</include>
+	                                        <include>index.html</include>
+											<include>favicon.ico</include>
+	                                    </includes>-->
+	                                </resource>
+	                            </resources>
+	                        </configuration>
+	                    </execution>
+	                </executions>
+           		</plugin>
+           		
 			</plugins>
 		</pluginManagement>
 	</build>

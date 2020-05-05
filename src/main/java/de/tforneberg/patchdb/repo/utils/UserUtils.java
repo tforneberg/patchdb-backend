@@ -14,8 +14,7 @@ public class UserUtils {
 	public String mapIDtoUsername(int id) {
 		try { 
 			return repo.getOne(id).getName(); 
-		} 
-		catch(EntityNotFoundException e) { 
+		} catch(EntityNotFoundException e) { 
 			return null; 
 		}
 	}

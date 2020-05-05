@@ -40,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	CorsConfigurationSource corsConfigurationSource() {
 		//Allow CORS from the front-end domain
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowCredentials(true); //needed for JWT authentication to work
+		config.setAllowCredentials(true); //needed for JWT authentication to work //can be removed? 
 		config.setAllowedOrigins(Arrays.asList(environment.getProperty("cors.allowedUrls").split(","))); //allowed front-end URLs
 		config.addAllowedHeader("*");  //any header
 		config.addAllowedMethod("*");  //any method
@@ -61,7 +61,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.rememberMe().rememberMeParameter("remember").tokenValiditySeconds(2629746) //one month 
         .and()
 	        .authorizeRequests()
-	        	.antMatchers("/", "/login", "/api/logout", "/api/users/register").permitAll()
+	        	.antMatchers("/", "/api/logout", "/api/users/register").permitAll()
 	        	.antMatchers("/api/patches").permitAll()
 	        	.anyRequest().authenticated()
 		.and()

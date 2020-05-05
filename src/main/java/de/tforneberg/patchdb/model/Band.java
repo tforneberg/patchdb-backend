@@ -48,6 +48,9 @@ public class Band {
 	//TODO date ? 
 	
 	//TODO refactor/rename to "Artist"
+	public Band(int id) {
+		this.id = id;
+	}
 	
 	public Band(int id, String name) {
 		this.id = id;
