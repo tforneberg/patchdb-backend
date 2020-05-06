@@ -23,3 +23,6 @@
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### copied frontend code ###
+/src/main/resources/public/
