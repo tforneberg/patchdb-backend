@@ -1,6 +1,7 @@
 package de.tforneberg.patchdb.security;
 
-import java.util.Arrays;
+import java.util.Collections;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,7 +29,6 @@ public class UserDetailsFromDBService implements UserDetailsService {
 		GrantedAuthority authority = new SimpleGrantedAuthority(user.getStatus().toString());
 		
 		//Construct and return a UserDetails implementation object
-		UserDetails userDetails = (UserDetails) new User(user.getName(), user.getPassword(), Arrays.asList(authority));
-		return userDetails;
+		return new User(user.getName(), user.getPassword(), Collections.singletonList(authority));
 	}
 }

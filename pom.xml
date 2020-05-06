@@ -1,31 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<!-- <packaging>war</packaging>--> <!-- activate for creating a WAR archive (containing only the app itself) instead of a JAR archive (containing the tomcat aswell)-->
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.1.2.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
+	
 	<groupId>de.tforneberg</groupId>
 	<artifactId>PatchDb</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${version}</version>
+	
+	<packaging>${packaging}</packaging>
+	
 	<name>PatchDb</name>
 	<description>PatchDB Backend</description> 
 
 	<properties>
+		<packaging>jar</packaging><!-- set to war for creating WAR (without Tomcat) instead of JAR (with Tomcat) -->
+		<version>0.0.1-SNAPSHOT</version>
+		
 		<java.version>1.8</java.version>
+		<thumbnailator.version>0.4.8</thumbnailator.version>
+		<typescript.codegeneration.version>2.17.558</typescript.codegeneration.version>
+		<amazon.awssdk.version>2.4.12</amazon.awssdk.version>
+		<modelmapper.version>2.3.4</modelmapper.version>
+		
+		<typescript.codegeneration.pattern>de.tforneberg.patchdb.model.**</typescript.codegeneration.pattern>
+		
+		<frontend.path>${project.basedir}/../patchdb_frontend/</frontend.path>
+		<frontend.generated.file.path>${frontend.path}src/model/Model.ts</frontend.generated.file.path>
+		<compiled.frontend.path>${frontend.path}target/dist</compiled.frontend.path>
 	</properties> 
 	
-	<!-- Amazon AWS Dependency Management -->
 	<dependencyManagement>
 	   <dependencies>
-		   <dependency>
+		   <dependency><!-- Amazon AWS Dependency version management bom -->
 		      <groupId>software.amazon.awssdk</groupId>
 		      <artifactId>bom</artifactId>
-		      <version>2.4.12</version>
+		      <version>${amazon.awssdk.version}</version>
 		      <type>pom</type>
 		      <scope>import</scope>
 		    </dependency>
@@ -33,91 +48,112 @@
 	</dependencyManagement>
 
 	<dependencies>
-	
-		<dependency><!-- Starter for building web, including RESTful, applications using Spring MVC. Uses Tomcat as the default embedded container-->
+		<dependency><!-- Starter for building web, including RESTful, applications using Spring MVC. Uses Tomcat as the default embedded container server -->
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
-		<dependency><!-- Includes testing libraries  -->
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
 		
-		<dependency><!--  Does some auto configuration and also includes the hot-reloading -->
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-		</dependency>
-		 
-		<dependency><!--  Adds monitoring and operational information features for the application -->
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-		
-		<dependency><!--  Adds Hibernate / ORM support  -->
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		
-		<dependency><!-- Auto REST Api generation from JPA repositories -->
+		<dependency><!-- Auto REST API generation from JPA repositories -->
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-rest</artifactId>
 		</dependency>
 		
-		<dependency> <!-- Adds MySQL database driver at runtime -->
+		<dependency><!-- Includes auto configuration and hot-reloading -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+		</dependency>
+		
+		<dependency><!-- Adds Hibernate / ORM support -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		
+		<dependency><!-- Adds MySQL database driver at runtime -->
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		
-		<dependency> <!-- For JSON and XML data binding -->
+		<dependency><!-- For JSON and XML data binding -->
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-databind</artifactId>
 		</dependency>
 		
-		<dependency> <!-- Model Mapper (Conversion Entity <-> DTO) -->
+		<dependency><!-- Model Mapper (Conversion Entity <-> DTO) -->
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
-			<version>2.3.4</version>
+			<version>${modelmapper.version}</version>
 		</dependency>
 		
-		<dependency> <!--  Security -->
+		<dependency><!--  Security -->
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-security</artifactId>
 	    </dependency>
-	    
-	    <dependency> <!-- Thumbnail generation library -->
-		  	<groupId>net.coobird</groupId>
-		  	<artifactId>thumbnailator</artifactId>
-		  	<version>0.4.8</version>
-		</dependency>
 	  
-	  	<dependency> <!-- Access to AWS S3 -->
-      		<groupId>software.amazon.awssdk</groupId>
-	      	<artifactId>s3</artifactId>
-			<!-- <version>2.4.12</version>-->
-		</dependency>
-	  
-	   	<dependency> <!-- Nice lib that provides eg @Getter/@Setter annotations -->
+	   	<dependency><!-- Nice library that provides (among other things) @Getter/@Setter annotations -->
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.8</version>
 			<scope>provided</scope>
 		</dependency>
 		
-		<dependency>
+		<dependency><!-- JSON processing and object mapping library -->
 		    <groupId>org.apache.johnzon</groupId>
 		    <artifactId>johnzon-core</artifactId>
-		    <version>${johnzon.version}</version>
 		</dependency>
 		
+		<dependency><!-- Includes testing libraries -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency><!-- Adds monitoring and operational information features -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		
+		<dependency><!-- Access to AWS S3 -->
+      		<groupId>software.amazon.awssdk</groupId>
+	      	<artifactId>s3</artifactId>
+		</dependency>
+		
+		<dependency><!-- Thumbnail generation library -->
+		  	<groupId>net.coobird</groupId>
+		  	<artifactId>thumbnailator</artifactId>
+		  	<version>${thumbnailator.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<plugin><!-- For packaging and running -->
+			<plugin> <!-- Copy final frontend artifacts to src/main/resources -->
+               	<artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy compiled frontend content</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>src/main/resources/public</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${compiled.frontend.path}</directory>
+                                    <!-- <includes>
+                                        <include>static/</include>
+                                        <include>index.html</include>
+										<include>favicon.ico</include>
+                                    </includes>-->
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+        	</plugin>
+			<plugin><!-- For packaging and running spring boot app -->
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>    
@@ -132,23 +168,11 @@
 			        <artifactId>heroku-maven-plugin</artifactId>
 			        <version>2.0.6</version>
 	     		</plugin>
-	     		
-	     		 <plugin>
-	                <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-dependency-plugin</artifactId>
-	                <executions>
-	                    <execution>
-	                        <id>copy-dependencies</id>
-	                        <phase>package</phase>
-	                        <goals><goal>copy-dependencies</goal></goals>
-	                    </execution>
-	                </executions>
-	            </plugin>
 	            
-	            <plugin><!-- TypeScript Code Generation. Call "mvn typescript-generator:generate" -->
+	            <plugin><!-- TypeScript Code Generation. Not executed in default build. Call "mvn typescript-generator:generate" -->
 				    <groupId>cz.habarta.typescript-generator</groupId>
 				    <artifactId>typescript-generator-maven-plugin</artifactId>
-				    <version>2.17.558</version>
+				    <version>${typescript.codegeneration.version}</version>
 				    <executions>
 				        <execution>
 				            <id>generate</id>
@@ -161,7 +185,7 @@
 				    <configuration>
 				        <jsonLibrary>jackson2</jsonLibrary>
 				        <classPatterns>
-				            <pattern>de.tforneberg.patchdb.model.**</pattern>
+				            <pattern>${typescript.codegeneration.pattern}</pattern>
 				        </classPatterns>
 				        <customTypeMappings>
                     		<mapping>java.sql.Date:string</mapping>
@@ -171,47 +195,18 @@
 				        <mapClasses>asClasses</mapClasses>
 				        <excludeClassPatterns>
 				        	<excludeClassPattern>
-				        		de.tforneberg.patchdb.model.**View
+				        		${typescript.codegeneration.pattern}View
 				        	</excludeClassPattern>
 				        	<excludeClassPattern>
-				        		de.tforneberg.patchdb.model.**Views
+				        		${typescript.codegeneration.pattern}Views
 				        	</excludeClassPattern>
 			        	</excludeClassPatterns>
 				        <mapEnum>asEnum</mapEnum>
 				        <nonConstEnums>true</nonConstEnums>
-				        <outputFile>C:/ownCloud/Programmierprojekte/patchdb_frontend/src/model/Model.ts</outputFile>
+				        <outputFile>${frontend.generated.file.path}</outputFile>
 				    </configuration>
 				</plugin>
-				
-				<plugin> <!-- Copy frontend to resources -->
-                <artifactId>maven-resources-plugin</artifactId>
-	                <executions>
-	                    <execution>
-	                        <id>copy Vue.js frontend content</id>
-	                        <phase>generate-resources</phase>
-	                        <goals>
-	                            <goal>copy-resources</goal>
-	                        </goals>
-	                        <configuration>
-	                            <outputDirectory>src/main/resources/public</outputDirectory>
-	                            <overwrite>true</overwrite>
-	                            <resources>
-	                                <resource>
-	                                    <directory>${project.basedir}/../patchdb_frontend/target/dist</directory>
-	                                    <!-- <includes>
-	                                        <include>static/</include>
-	                                        <include>index.html</include>
-											<include>favicon.ico</include>
-	                                    </includes>-->
-	                                </resource>
-	                            </resources>
-	                        </configuration>
-	                    </execution>
-	                </executions>
-           		</plugin>
-           		
 			</plugins>
 		</pluginManagement>
 	</build>
-
 </project>
