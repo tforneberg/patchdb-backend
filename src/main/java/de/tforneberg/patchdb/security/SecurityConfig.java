@@ -65,10 +65,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.rememberMe().rememberMeParameter("remember").tokenValiditySeconds(2629746) //one month 
         .and()
 	        .authorizeRequests()
-				.antMatchers("/", "/js/**", "/css/**", "/img/**", "/favicon.ico", "/index.html").permitAll() //everyone should be able to retrieve frontend
+				//.antMatchers("/", "/js/**", "/css/**", "/img/**", "/favicon.ico", "/index.html").permitAll() //everyone should be able to retrieve frontend
 	        	.antMatchers("/api/users/register").permitAll() //everyone should be able to register
 	        	.antMatchers("/api/patches").permitAll() //everyone should be able to get patches list
-	        	.anyRequest().authenticated() //everything else required authentication
+				.antMatchers("/api/**").authenticated() //everything else from API requires authentication
 		.and()
 			//Configure CSRF prevention/security, tell Spring to send XSRF-Token in Cookie
 			//(Clients can obtain the XSRF-Token by calling e.g. GET "/")
