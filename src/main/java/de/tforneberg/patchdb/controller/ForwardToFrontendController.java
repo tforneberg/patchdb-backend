@@ -15,7 +15,7 @@ public class ForwardToFrontendController implements ErrorController {
 	
     @RequestMapping(value = PATH)
     public String error() {
-        return "forward:/";
+        return "forward:/index.html";
     }
 
 }

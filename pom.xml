@@ -139,7 +139,7 @@
 
 	<build>
 		<plugins>
-			<plugin> <!-- Copy final frontend artifacts to src/main/resources -->
+			<plugin> <!-- Copy compiled frontend artifacts to src/main/resources -->
                	<artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
@@ -149,16 +149,11 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>src/main/resources/public</outputDirectory>
+                            <outputDirectory>src/main/resources/static</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
                                     <directory>${compiled.frontend.path}</directory>
-                                    <!-- <includes>
-                                        <include>static/</include>
-                                        <include>index.html</include>
-										<include>favicon.ico</include>
-                                    </includes>-->
                                 </resource>
                             </resources>
                         </configuration>

@@ -65,9 +65,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.rememberMe().rememberMeParameter("remember").tokenValiditySeconds(2629746) //one month 
         .and()
 	        .authorizeRequests()
-	        	.antMatchers("/", "/api/logout", "/api/users/register").permitAll()
-	        	.antMatchers("/api/patches").permitAll()
-	        	.anyRequest().authenticated()
+				.antMatchers("/", "/js/**", "/css/**", "/img/**", "/favicon.ico", "/index.html").permitAll() //everyone should be able to retrieve frontend
+	        	.antMatchers("/api/users/register").permitAll() //everyone should be able to register
+	        	.antMatchers("/api/patches").permitAll() //everyone should be able to get patches list
+	        	.anyRequest().authenticated() //everything else required authentication
 		.and()
 			//Configure CSRF prevention/security, tell Spring to send XSRF-Token in Cookie
 			//(Clients can obtain the XSRF-Token by calling e.g. GET "/")
@@ -77,8 +78,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.cors()
 		.and()
 			.logout() //Configure logout behavior
-			.logoutUrl("/api/logout") //specify logout URL
-			.logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)); //do not auto redirect after logout
+				.logoutUrl("/api/logout") //specify logout URL
+				.logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)); //do not auto redirect after logout
 	}
 
 	@Autowired
