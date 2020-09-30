@@ -98,7 +98,7 @@ public class AWSS3Client {
 
 	        uploadFileTos3bucket(entityPath+"/"+fileName, bigFileToUpload);
 	        uploadFileTos3bucket(entityPath+"/"+fileNameSmall, smallFileToUpload);
-	        originalFile.delete();
+			originalFile.delete();
 	        bigFileToUpload.delete();
 	        smallFileToUpload.delete();
 	    } catch (Exception e) {

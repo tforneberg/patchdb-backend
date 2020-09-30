@@ -96,7 +96,19 @@
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
+
+		<dependency><!-- Google library for Java with many useful utilities -->
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>29.0-jre</version>
+		</dependency>
+
+		<dependency><!-- Nice utilities, e.g. StringUtils -->
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.11</version>
+		</dependency>
+
 		<dependency><!-- JSON processing and object mapping library -->
 		    <groupId>org.apache.johnzon</groupId>
 		    <artifactId>johnzon-core</artifactId>

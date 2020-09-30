@@ -40,10 +40,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	CorsConfigurationSource corsConfigurationSource() {
 		//Allow CORS from the front-end domain
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowCredentials(true); //needed for JWT authentication to work //can be removed? 
-		config.setAllowedOrigins(Arrays.asList(environment.getProperty("cors.allowedUrls").split(","))); //allowed front-end URLs
+
+		String allowedOrigins = environment.getProperty("cors.allowedUrls");
+		if (allowedOrigins != null) {
+			config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(","))); //allowed front-end URLs
+		}
 		config.addAllowedHeader("*");  //any header
 		config.addAllowedMethod("*");  //any method
+
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
 		return source;
@@ -74,8 +78,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.and()
 			.logout() //Configure logout behavior
 			.logoutUrl("/api/logout") //specify logout URL
-			.logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)); //tell Spring not to do auto redirect after logout
-		
+			.logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)); //do not auto redirect after logout
 	}
 
 	@Autowired

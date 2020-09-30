@@ -1,8 +1,10 @@
 package de.tforneberg.patchdb.controller;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -47,10 +49,11 @@ public class NewsController {
 	
 	 @GetMapping
 	 @JsonView(NewsAndUserDefaultView.class)
-	 public ResponseEntity<List<News>> getAll(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size, 
-			 @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @RequestParam(name = Constants.DIRECTION) Optional<String> direction) {
+	 public ResponseEntity<List<News>> getAll(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+											  @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+											  @RequestParam(name = Constants.SORTBY) Optional<String> sortBy,
+											  @RequestParam(name = Constants.DIRECTION) Optional<String> direction) {
 		 Page<News> result = newsRepo.findAll(ControllerUtil.getPageable(page, size, sortBy, direction));
-		 
 		 return ResponseEntity.ok().body(result.getContent());
 	 }
 	 
@@ -67,11 +70,16 @@ public class NewsController {
 	 @PutMapping(Constants.ID_MAPPING)
 	 @PreAuthorize(Constants.AUTH_ADMIN_OR_MOD)
 	 public ResponseEntity<News> updateNews(@PathVariable("id") int id, String update, Authentication auth) {
-		 News news = newsRepo.findById(id).orElse(null);
-			if (news != null) {
-				boolean createdByCurrentUser = news.getCreator().getName().equals(auth.getName());
-				boolean success = createdByCurrentUser || ControllerUtil.updateObjectWithPatchString(update, news, News.class, auth);
-			    return success ? ResponseEntity.ok().body(newsRepo.save(news)) : ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		 Optional<News> newsOptional = newsRepo.findById(id);
+			if (newsOptional.isPresent()) {
+				News news = newsOptional.get();
+				boolean createdByRequestingUser = wasCreatedByRequestingUser(news, auth);
+				if (createdByRequestingUser && ControllerUtil.isUserAllowedToDoPATCHRequest(update, News.class, auth)) {
+					ControllerUtil.updateObjectWithPatchString(update, news, News.class);
+					return ResponseEntity.ok().body(newsRepo.save(news));
+				} else {
+					ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+				}
 			}
 			return ResponseEntity.notFound().build();
 	 }
@@ -80,17 +88,19 @@ public class NewsController {
 	@DeleteMapping(Constants.ID_MAPPING)
 	@PreAuthorize(Constants.AUTH_ADMIN_OR_MOD)
 	public ResponseEntity<Void> deleteNews(@PathVariable("id") int id, Authentication auth) {
-		News news = newsRepo.findById(id).orElse(null);
-		if (news != null) {
-			boolean allowed = ControllerUtil.hasUserStatus(auth, UserStatus.admin);
-			allowed = allowed || news.getCreator().getName().equals(auth.getName());
-			if (allowed) {
-				newsRepo.delete(news);
+		Optional<News> news = newsRepo.findById(id);
+		if (news.isPresent()) {
+			if (wasCreatedByRequestingUser(news.get(), auth) || ControllerUtil.hasUserStatus(auth, UserStatus.admin)) {
+				newsRepo.delete(news.get());
 				return ResponseEntity.ok().build();
 			} else {
 				return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 			}
 		}
 		return ResponseEntity.notFound().build();
+	}
+
+	private static boolean wasCreatedByRequestingUser(News news, Authentication authentication) {
+		return StringUtils.equals(news.getCreator().getName(), authentication.getName());
 	}
 }

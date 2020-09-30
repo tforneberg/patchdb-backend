@@ -1,11 +1,11 @@
 package de.tforneberg.patchdb.controller;
 
-import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -71,7 +71,7 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/findByName/{name}") //better as query param ...  /&name={name} ?? would allow generic search for every field
+	@GetMapping("/findByName/{name}") //better as query param ...  /&name={name} would allow generic search for every field, more REST conform
 	@JsonView(User.CompleteView.class)
 	public ResponseEntity<User> getByName(@PathVariable("name") String name) {
 		User result = repo.findByName(name);
@@ -81,8 +81,10 @@ public class UserController {
 	
 	@GetMapping()
 	@JsonView(User.DefaultView.class)
-	public ResponseEntity<List<User>> getAll(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size, 
-			@RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
+	public ResponseEntity<List<User>> getAll(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+											 @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+											 @RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+											 @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
 		Page<User> result = repo.findAll(ControllerUtil.getPageable(page, size, direction, sortBy));
 		return ResponseEntity.ok().body(result.getContent());
 	}
@@ -108,8 +110,8 @@ public class UserController {
 	@PostMapping(Constants.ID_MAPPING+"/uploadImage")
 	@PreAuthorize(Constants.AUTH_ID_IS_OF_REQUESTING_USER)
 	public ResponseEntity<Void> uploadImage(@PathVariable("id") int id, MultipartFile file) {
-		User user = repo.findById(id).orElse(null);
-		if (user == null) {
+		Optional<User> user = repo.findById(id);
+		if (!user.isPresent()) {
 			return ResponseEntity.badRequest().build();
 		}
 		
@@ -117,29 +119,30 @@ public class UserController {
 		if (fileUrl == null || fileUrl.isEmpty()) {
 			return ResponseEntity.badRequest().build();
 		}
-		user.setImage(fileUrl);
+		user.get().setImage(fileUrl);
 		
-		repo.save(user);
+		repo.save(user.get());
 		return ResponseEntity.ok().build();
 	}
 	
 	@GetMapping(Constants.ID_MAPPING+"/patches")
 	@JsonView(UserAndPatchDefaultView.class)
 	public ResponseEntity<Collection> getUserPatches(@PathVariable("id") int id, 
-			@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size, 
-			@RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @RequestParam(name = Constants.DIRECTION) Optional<String> direction, Authentication auth) {
-		boolean showIfNotApproved = ControllerUtil.hasUserStatus(auth, UserStatus.admin) || ControllerUtil.hasUserStatus(auth, UserStatus.mod);
+													 @RequestParam(name = Constants.PAGE) Optional<Integer> page,
+													 @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+													 @RequestParam(name = Constants.SORTBY) Optional<String> sortBy,
+													 @RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+													 Authentication auth) {
+		Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
 		User user = repo.findById(id).orElse(null);
-		
 		Page<Patch> patches;
-		if (showIfNotApproved) {
-			patches = patchRepo.findPatchesByUserId(id, ControllerUtil.getPageable(page, size, sortBy, direction));
+		if (ControllerUtil.hasUserAnyStatus(auth, UserStatus.admin, UserStatus.mod)) {
+			patches = patchRepo.findPatchesByUserId(id, pageable);
 		} else {
-			patches = patchRepo.findPatchesByUserIdAndWithState(id, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+			patches = patchRepo.findPatchesByUserIdAndWithState(id, PatchState.approved, pageable);
 		}
 		
 		Collection result = user != null && patches != null ? new Collection(patches.getContent(), user.getName()) : null;
-		
 		return ControllerUtil.getResponseOrNotFound(result);
 	}
 	
@@ -147,25 +150,34 @@ public class UserController {
 	@PatchMapping(Constants.ID_MAPPING)
 	@JsonView(User.CompleteView.class)
 	public ResponseEntity<User> updateUser(@PathVariable("id") int id, @RequestBody String update, Authentication auth) {
-	    User user = repo.findById(id).orElse(null);
-	    if (user != null) {
-	    	boolean success = ControllerUtil.updateObjectWithPatchString(update, user, User.class, auth);
-		    return success ? ResponseEntity.ok().body(repo.save(user)) : ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+	    Optional<User> user = repo.findById(id);
+	    if (user.isPresent()) {
+	    	if (ControllerUtil.isUserAllowedToDoPATCHRequest(update, User.class, auth)) {
+				ControllerUtil.updateObjectWithPatchString(update, user.get(), User.class);
+				ResponseEntity.ok().body(repo.save(user.get()));
+			} else {
+				ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			}
 	    }
 		return ResponseEntity.notFound().build();
 	}
 
 	@PatchMapping(Constants.ID_MAPPING+"/changePassword")
 	@PreAuthorize(Constants.AUTH_ID_IS_OF_REQUESTING_USER)
-	public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequestData data, @PathVariable("id") int id, BindingResult result) {
+	public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequestData data,
+												 @PathVariable("id") int id,
+												 BindingResult result) {
 		changePWvalidator.validate(data, result);
 		if (result.hasErrors()) { throw new BadRequestException(result); }
-		
-		User user = repo.findById(id).orElse(null);
-		user.setPassword(passwordEncoder.encode(data.getPassword()));
-		repo.save(user);
-		
-		return ResponseEntity.ok().build();
+
+		Optional<User> user = repo.findById(id);
+		if (user.isPresent()) {
+			user.get().setPassword(passwordEncoder.encode(data.getPassword()));
+			repo.save(user.get());
+			return ResponseEntity.ok().build();
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 	
 	@PatchMapping(Constants.ID_MAPPING+"/patches")

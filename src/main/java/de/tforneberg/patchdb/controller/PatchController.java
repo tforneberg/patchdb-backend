@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,64 +51,91 @@ public class PatchController {
 	@GetMapping(Constants.ID_MAPPING)
 	@JsonView(PatchCompleteOthersDefaultView.class)
 	public ResponseEntity<Patch> getById(@PathVariable("id") int id, Authentication auth) {
-		boolean showIfNotApproved = ControllerUtil.hasUserStatus(auth, UserStatus.admin) || ControllerUtil.hasUserStatus(auth, UserStatus.mod);
-		Optional<Patch> result = showIfNotApproved ? patchRepo.findById(id) : patchRepo.findByIdAndState(id, PatchState.approved);
-		return ResponseEntity.of(result);
+		boolean showEvenIfNotApproved = ControllerUtil.hasUserAnyStatus(auth, UserStatus.admin, UserStatus.mod);
+		if (showEvenIfNotApproved) {
+			return ResponseEntity.of(patchRepo.findById(id));
+		} else {
+			return ResponseEntity.of(patchRepo.findByIdAndState(id, PatchState.approved));
+		}
 	}
 	
 	@GetMapping("/findByName/{name}")
 	@JsonView(Patch.DefaultView.class)
-	public ResponseEntity<List<Patch>> getByNameApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
-			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("name") String name) {
-		Page<Patch> result = patchRepo.findByNameContainingIgnoreCaseAndState(name, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+	public ResponseEntity<List<Patch>> getByNameApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+														 @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+														 @RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+														 @RequestParam(name = Constants.SORTBY) Optional<String> sortBy,
+														 @PathVariable("name") String name) {
+		Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
+		Page<Patch> result = patchRepo.findByNameContainingIgnoreCaseAndState(name, PatchState.approved, pageable);
 		return ResponseEntity.ok().body(result.getContent());
 	}
 	
 	@GetMapping("/findByBand/{id}")
 	@JsonView(Patch.DefaultView.class)
-	public ResponseEntity<List<Patch>> getByBandApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
-			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("id") int bandId) {
-		Page<Patch> result = patchRepo.findByBandIdAndWithState(bandId, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+	public ResponseEntity<List<Patch>> getByBandApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+														 @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+														 @RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+														 @RequestParam(name = Constants.SORTBY) Optional<String> sortBy,
+														 @PathVariable("id") int bandId) {
+		Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
+		Page<Patch> result = patchRepo.findByBandIdAndWithState(bandId, PatchState.approved, pageable);
 		return ResponseEntity.ok().body(result.getContent());
 	}
 	
 	@GetMapping("/findByUserCreated/{id}")
 	@JsonView(Patch.DefaultView.class)
-	public ResponseEntity<List<Patch>> getByUserCreatedAndApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
-			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("id") int userCreatedId) {
-		Page<Patch> result = patchRepo.findPatchesByCreatorIdAndWithState(userCreatedId, PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+	public ResponseEntity<List<Patch>> getByUserCreatedAndApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+																   @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+																   @RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+																   @RequestParam(name = Constants.SORTBY) Optional<String> sortBy,
+																   @PathVariable("id") int userCreatedId) {
+		Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
+		Page<Patch> result = patchRepo.findPatchesByCreatorIdAndWithState(userCreatedId, PatchState.approved, pageable);
 		return ResponseEntity.ok().body(result.getContent()); 
 	}
 	
 	@GetMapping("/findByType/{type}")
 	@JsonView(Patch.DefaultView.class)
-	public ResponseEntity<List<Patch>> getByTypeAndApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
-			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy, @PathVariable("type") String type) {
-		Page<Patch> result = patchRepo.findPatchesByTypeAndWithState(Patch.PatchType.valueOf(type), PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+	public ResponseEntity<List<Patch>> getByTypeAndApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+															@RequestParam(name = Constants.SIZE) Optional<Integer> size,
+															@RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+															@RequestParam(name = Constants.SORTBY) Optional<String> sortBy,
+															@PathVariable("type") String type) {
+		Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
+		Patch.PatchType patchType = Patch.PatchType.valueOf(type);
+		Page<Patch> result = patchRepo.findPatchesByTypeAndWithState(patchType, PatchState.approved, pageable);
 		return ResponseEntity.ok().body(result.getContent());
 	}
 	
 	 @GetMapping
 	 @JsonView(Patch.DefaultView.class)
-	 public ResponseEntity<List<Patch>> getApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
-			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
-		 Page<Patch> result = patchRepo.findByState(PatchState.approved, ControllerUtil.getPageable(page, size, sortBy, direction));
+	 public ResponseEntity<List<Patch>> getApproved(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+													@RequestParam(name = Constants.SIZE) Optional<Integer> size,
+													@RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+													@RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
+		 Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
+		 Page<Patch> result = patchRepo.findByState(PatchState.approved, pageable);
 		 return ResponseEntity.ok().body(result.getContent());
 	 }
 	
 	 @GetMapping("/approvalNeeded")
 	 @JsonView(Patch.DefaultView.class)
 	 @PreAuthorize(Constants.AUTH_ADMIN_OR_MOD)
-	 public ResponseEntity<List<Patch>> getWhereApprovalNeeded(@RequestParam(name = Constants.PAGE) Optional<Integer> page, @RequestParam(name = Constants.SIZE) Optional<Integer> size,
-			 @RequestParam(name = Constants.DIRECTION) Optional<String> direction, @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
-		 Page<Patch> result = patchRepo.findByState(PatchState.notApproved, ControllerUtil.getPageable(page, size, sortBy, direction));
-		 return ResponseEntity.ok().body(result.getContent());
+	 public ResponseEntity<List<Patch>> getWhereApprovalNeeded(@RequestParam(name = Constants.PAGE) Optional<Integer> page,
+															   @RequestParam(name = Constants.SIZE) Optional<Integer> size,
+															   @RequestParam(name = Constants.DIRECTION) Optional<String> direction,
+															   @RequestParam(name = Constants.SORTBY) Optional<String> sortBy) {
+	 	Pageable pageable = ControllerUtil.getPageable(page, size, sortBy, direction);
+	 	Page<Patch> result = patchRepo.findByState(PatchState.notApproved, pageable);
+	 	return ResponseEntity.ok().body(result.getContent());
 	 }
 	
 	//POST
     @PostMapping
     @PreAuthorize(Constants.LOGGED_IN)
-    public ResponseEntity<Void> uploadFile(@RequestPart("patchData") Patch patch, @RequestPart("file") MultipartFile file) {
+    public ResponseEntity<Void> uploadFile(@RequestPart("patchData") Patch patch,
+										   @RequestPart("file") MultipartFile file) {
     	//todo check form and file validity...
     	
     	String fileUrl = s3Client.uploadPatchImages(file);
@@ -129,10 +157,14 @@ public class PatchController {
 	@PatchMapping(Constants.ID_MAPPING)
 	@JsonView(PatchCompleteOthersDefaultView.class)
 	public ResponseEntity<Patch> updatePatch(@PathVariable("id") int id, @RequestBody String update, Authentication auth) {
-	    Patch patch = patchRepo.findById(id).orElse(null);
-	    if (patch != null) {
-	    	boolean success = ControllerUtil.updateObjectWithPatchString(update, patch, Patch.class, auth);
-		    return success ? ResponseEntity.ok().body(patchRepo.save(patch)) : ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+	    Optional<Patch> patch = patchRepo.findById(id);
+	    if (patch.isPresent()) {
+	    	if (ControllerUtil.isUserAllowedToDoPATCHRequest(update, Patch.class, auth)) {
+				ControllerUtil.updateObjectWithPatchString(update, patch.get(), Patch.class);
+				return ResponseEntity.ok().body(patchRepo.save(patch.get()));
+			} else {
+	    		ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			}
 	    }
 		return ResponseEntity.notFound().build();
 	}
@@ -141,11 +173,11 @@ public class PatchController {
 	@DeleteMapping(Constants.ID_MAPPING)
 	@PreAuthorize(Constants.AUTH_ADMIN_OR_MOD) //should a user be able to delete the patches that he added/created?
 	public ResponseEntity<Void> deletePatch(@PathVariable("id") int id) {
-		Patch patch = patchRepo.findById(id).orElse(null);
-		if (patch != null) {
-			boolean success = s3Client.deleteImageAndThumbnailFromBucket(patch.getImage());
+		Optional<Patch> patch = patchRepo.findById(id);
+		if (patch.isPresent()) {
+			boolean success = s3Client.deleteImageAndThumbnailFromBucket(patch.get().getImage());
 			if (success) {
-				patchRepo.delete(patch);
+				patchRepo.delete(patch.get());
 				return ResponseEntity.ok().build();
 			} else {
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
