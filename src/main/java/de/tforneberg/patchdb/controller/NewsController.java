@@ -78,7 +78,7 @@ public class NewsController {
 					ControllerUtil.updateObjectWithPatchString(update, news, News.class);
 					return ResponseEntity.ok().body(newsRepo.save(news));
 				} else {
-					ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+					return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 				}
 			}
 			return ResponseEntity.notFound().build();

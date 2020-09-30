@@ -163,7 +163,7 @@ public class PatchController {
 				ControllerUtil.updateObjectWithPatchString(update, patch.get(), Patch.class);
 				return ResponseEntity.ok().body(patchRepo.save(patch.get()));
 			} else {
-	    		ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+	    		return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 			}
 	    }
 		return ResponseEntity.notFound().build();

@@ -154,9 +154,9 @@ public class UserController {
 	    if (user.isPresent()) {
 	    	if (ControllerUtil.isUserAllowedToDoPATCHRequest(update, User.class, auth)) {
 				ControllerUtil.updateObjectWithPatchString(update, user.get(), User.class);
-				ResponseEntity.ok().body(repo.save(user.get()));
+				return ResponseEntity.ok().body(repo.save(user.get()));
 			} else {
-				ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 			}
 	    }
 		return ResponseEntity.notFound().build();
