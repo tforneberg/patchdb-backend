@@ -26,3 +26,4 @@
 
 ### copied frontend code ###
 /src/main/resources/static/
+/src/main/resources/application.properties
