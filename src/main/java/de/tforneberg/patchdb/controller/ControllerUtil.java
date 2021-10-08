@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Streams;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,19 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tforneberg.patchdb.model.User.UserStatus;
 import de.tforneberg.patchdb.security.HttpPATCHAllowed;
 
+@Log4j2
 public class ControllerUtil {
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
-	
-	//TODO
-//	static Integer getAuthUserId(Authentication auth) {
-//		if (auth.getDetails() instanceof UserDetails) {
-//			UserDetails userDetails = (UserDetails) auth.getDetails();
-//			userDetails.
-//		}
-//		return false;
-//	}
-	
+
 	/**
 	 * Updates a given object (objectToUpdate) of given type (type) with the given string (string). 
 	 * Therefore, the string (containing a JSON stringified part of the object to update, containing only the fields that should be updated)
@@ -61,7 +54,7 @@ public class ControllerUtil {
 				}
 			}
 		} catch (IOException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 			return false;
 		}
     	
@@ -73,7 +66,7 @@ public class ControllerUtil {
 			return getFieldsFromJSONRequest(request, type).stream()
 					.allMatch(field -> isUserAllowedToDoPATCHOnField(auth, field));
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 			return false;
 		}
 	}
